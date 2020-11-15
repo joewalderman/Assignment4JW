@@ -1,0 +1,125 @@
+---
+title: "a4task2jw"
+author: "Joe Walderman"
+date: "11/14/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(here)
+```
+
+
+## Exploratory Findings: In this section I will be calculating juvenile hare trap counts for each year of the study.
+
+### Step 1: Reading in the data
+
+```{r}
+hares <- read_csv(here("data", "bonanza_hares.csv"))
+```
+
+### Step 2:
+
+```{r}
+hares_dates <- hares %>%
+  mutate(date_new = mdy(date)) %>%
+  mutate(year_new = year(date_new))
+
+hares_j <- hares_dates %>% 
+  filter(age == "j")
+
+hares_j_yearly <- hares_j %>% 
+  group_by(year_new) %>% 
+  summarize(count = n())
+
+hares_j$year_new <- as.factor(hares_j$year_new)
+```
+
+### Step 3:
+
+```{r}
+ggplot(data = hares_j_yearly, aes(x = year_new, y = count)) +
+  geom_col() +
+  labs(x = "Year",
+       y = "Hares",
+       title = "Annual Juvenile Hare Trappings in Bonanza Creek (1999-2012)",
+       tag = "Figure 1: Number of juvenile showhow hares trapped each year in Bonanza Creek Experimental Forest from 1999-2012. These numbers were obtained in a study conducted by University of Alaska - Fairbanks.") +
+  theme(plot.tag.position = "bottom",
+        plot.tag = element_text(size = 5),
+        plot.title = element_text(hjust = .5, size = 16))
+```
+
+### Step 4:
+
+```{r}
+hares_j_sum <- hares_j_yearly %>% 
+  summarize(mean_count = mean(count),
+            median_count = median(count),
+            minimum = min(count),
+            maximum = max(count))
+
+hares_j_sum
+```
+
+Some of the major takeaways from this graph is that the number of trappings declined after the first two years, though there are staggered upticks after a certain low amount is reached. Each rebound, though, is smaller every time it occurs.  Every tie thaThe lowest trapping count for a year in this study was `mean(hares_j_stats$count)` and
+
+
+```{r}
+hares_j_sites <- hares_j %>% 
+  mutate(grid_full = case_when(
+    grid == "bonrip" ~ "Bonanza Riparian",
+    grid == "bonmat" ~ "Bonanza Mature",
+    grid == "bonbs" ~ "Bonanza Lowland"
+  )) %>% 
+  mutate(sex_full = case_when(
+  sex == "f" ~ "Female",
+  sex == "m" ~ "Male",
+  sex == "NA" ~ "Unknown"
+  ))
+```
+
+
+```{r}
+ggplot(data = hares_j_sites, aes(x = sex_full, y = weight, fill = sex_full)) +
+  geom_violin(position = "dodge", alpha = 0.7) +
+  geom_boxplot(width = .1) +
+  labs(
+    x = "Sex",
+    y = "Weight (grams)"
+  ) +
+  theme_light() +
+  facet_wrap(~grid_full)
+  
+```
+
+
+```{r}
+hares_j_stat <- hares_j_sites %>%
+  group_by(sex_full) %>% 
+  summarize(mean_weight = mean(weight, na.rm = TRUE),
+            sd_weight = sd(weight, na.rm = TRUE),
+            sample_size = n())
+
+hares_j_stat
+```
+
+
+```{r}
+hares_female <- hares_j_sites %>% 
+  filter(sex_full == "Female") %>% 
+  pull(weight)
+
+hares_male <- hares_j_sites %>% 
+  filter(sex_full == "Male") %>% 
+  pull(weight)
+
+t.test(hares_female, hares_male)
+```
+
+The actual difference in mean weight between female and male snowshoe hares is ``. 
+
+
