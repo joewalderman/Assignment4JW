@@ -1,4 +1,4 @@
----
+??./.,.,.jmikiuio000000000000---
 title: "a4task2jw"
 author: "Joe Walderman"
 date: "11/14/2020"
@@ -11,8 +11,16 @@ library(tidyverse)
 library(janitor)
 library(lubridate)
 library(here)
+library(broom)
+library(effsize)
 ```
 
+
+
+## Introduction: A 4 - 5 sentence "mini-introduction" to what this study is exploring, including basic background information about the subject, site and study (with citations as needed), and a brief overview of what is included in the exploratory report. You should probably do this last.
+
+
+## Data and Analysis:A 3 - 4 sentence section in which you briefly describe the data, including citation & credit as needed, and provide an overview of the main analysis, statistical methods and tools used.
 
 ## Exploratory Findings: In this section I will be calculating juvenile hare trap counts for each year of the study.
 
@@ -22,7 +30,7 @@ library(here)
 hares <- read_csv(here("data", "bonanza_hares.csv"))
 ```
 
-### Step 2:
+### Step 2:Data wrangling
 
 ```{r}
 hares_dates <- hares %>%
@@ -39,7 +47,10 @@ hares_j_yearly <- hares_j %>%
 hares_j$year_new <- as.factor(hares_j$year_new)
 ```
 
-### Step 3:
+## Exploratory Findings
+
+
+### i) Annual juvenile hare trap counts
 
 ```{r}
 ggplot(data = hares_j_yearly, aes(x = year_new, y = count)) +
@@ -106,7 +117,7 @@ hares_j_stat <- hares_j_sites %>%
 
 hares_j_stat
 ```
-
+# t-test and cohen's d (effect size)
 
 ```{r}
 hares_female <- hares_j_sites %>% 
@@ -118,8 +129,71 @@ hares_male <- hares_j_sites %>%
   pull(weight)
 
 t.test(hares_female, hares_male)
+
+cohen.d(hares_female, hares_male)
+```
+
+```{r, include=FALSE}
+ggplot(data = hares_j_sites, aes(x = weight)) +
+  geom_histogram() +
+  facet_wrap(~sex_full)
+
+ggplot(data = hares_j_sites, aes(sample = weight)) +
+  geom_qq() +
+  facet_wrap(~sex_full)
 ```
 
 The actual difference in mean weight between female and male snowshoe hares is ``. 
+
+
+```{r}
+ggplot(data = hares_j_sites, aes(x = hindft, y = weight)) +
+  geom_point(size = 1.5) +  
+  geom_smooth(method = "lm",
+              color = "red",
+              size = 0.5,
+              fill = "gray10",
+              alpha = 0.5) +
+  labs(
+    x = "Hind Foot Length (mm)",
+    y = "Weight (g)",
+    title = "Weight and Hind Foot Length in Juvenile Snowshow Hares",
+    tag = "Figure 4: This graph explores the relationship between weight and hind food length in juvenile snowshoe hares captured in this study") +
+      theme(plot.tag.position = "bottom",
+        plot.tag = element_text(size = 6),
+        plot.title = element_text(hjust = .5, size = 14))
+```
+
+I have some concerns here about the homoscedacisity of the relationship. It seems that the residuals are even up to about the 100mm hind foot length but beyond that the model seems to be heteroscedastic, as the distance of the residuals from the regression line increases.
+
+## Linear Regression Model
+
+```{r}
+hares_j_lm <- lm(weight ~ hindft, data = hares_j_sites)
+
+summary(hares_j_lm) #returning the complete overview
+```
+
+- hindft coefficient means we expect hare weight (g) to increase by 9.5234 grams for every 1 mm increase in hind foot lenth
+
+- intercept means for a hare with 0mm hind foot length we expect a weight of -297.3419 grams.
+
+- The Multiple R^2^ value is 0.2988 - meaning that 29.9% of variance in weight is explained by hind foot length
+
+
+### Using broom package to tidy up my linear regression model results.
+
+```{r}
+hares_j_lm_tidy <- broom::tidy(hares_j_lm)
+
+hares_j_lm_out <- broom::glance(hares_j_lm)
+```
+
+Simple linear regression was used to explore the relationship between hind foot length (mm) and weight (g).
+
+
+```{r}
+plot(hares_j_lm) # *remember to include = false*
+```
 
 
