@@ -30,7 +30,7 @@ library(effsize)
 hares <- read_csv(here("data", "bonanza_hares.csv"))
 ```
 
-### Step 2:Data wrangling
+### Step 2:Data wrangling: Isolating hare trappings classified as juvenile and pulling the year of trapping for each observation from the date.
 
 ```{r}
 hares_dates <- hares %>%
@@ -50,7 +50,7 @@ hares_j$year_new <- as.factor(hares_j$year_new)
 ## Exploratory Findings
 
 
-### i) Annual juvenile hare trap counts
+### i) Annual juvenile hare trap counts: In this section I evaluate the total number of trappings of juvenile hares for each year of the study, including a data visualization to illustrate this data.
 
 ```{r}
 ggplot(data = hares_j_yearly, aes(x = year_new, y = count)) +
@@ -64,7 +64,9 @@ ggplot(data = hares_j_yearly, aes(x = year_new, y = count)) +
         plot.title = element_text(hjust = .5, size = 16))
 ```
 
-### Step 4:
+
+
+### Part 4
 
 ```{r}
 hares_j_sum <- hares_j_yearly %>% 
@@ -76,7 +78,12 @@ hares_j_sum <- hares_j_yearly %>%
 hares_j_sum
 ```
 
-Some of the major takeaways from this graph is that the number of trappings declined after the first two years, though there are staggered upticks after a certain low amount is reached. Each rebound, though, is smaller every time it occurs.  Every tie thaThe lowest trapping count for a year in this study was `mean(hares_j_stats$count)` and
+Some of the major takeaways from this graph is that the number of trappings declined after the first two years, though there are staggered upticks after a certain low amount is reached. Each rebound, though, is smaller every time it occurs.  Every time that the lowest trapping count for a year in this study was `mean(hares_j_stats$count)`... It seems that there has been an overall decline in the hare population in these areas based on these samples, with intermittent periods of recovery followed by decline. ] Another point of interest in the notable difference between the mean and median yearly hare trappings.
+
+These are absolute counts, but this count is also impacted by effort (e.g. the number of days and number of traps in the study each year). What would you suggest be done moving forward (you are not expected to actually do this) to standardize the juvenile hare population in future analyses?
+
+
+## ii) Visualize juvenile hare weights
 
 
 ```{r}
@@ -107,6 +114,13 @@ ggplot(data = hares_j_sites, aes(x = sex_full, y = weight, fill = sex_full)) +
   
 ```
 
+Then, in 2 - 3 sentences below your visualization(s) describe in text the main takeaways that you would want the audience to understand from your figures.
+
+Males generally have a higher density of observations in higher weight recordings than females. The width of the plot represents the density of observations at that weight level. The boxplots indicate the sample sizes which can contribute to the vraince and the mean which can more easily illustrate the differences between the two.
+
+
+## iii) Juvenile weight comparison (male and female snowshoe hares)
+
 
 ```{r}
 hares_j_stat <- hares_j_sites %>%
@@ -117,6 +131,10 @@ hares_j_stat <- hares_j_sites %>%
 
 hares_j_stat
 ```
+
+Table caption above the table
+
+
 # t-test and cohen's d (effect size)
 
 ```{r}
@@ -128,13 +146,25 @@ hares_male <- hares_j_sites %>%
   filter(sex_full == "Male") %>% 
   pull(weight)
 
+actual_dif <- function(mean_1, mean_2) {mean_2 - mean_1}
+
+actual_dif(mean(hares_female), mean(hares_male))
+
 t.test(hares_female, hares_male)
 
 cohen.d(hares_female, hares_male)
 ```
 
-```{r, include=FALSE}
-ggplot(data = hares_j_sites, aes(x = weight)) +
+A 2 - 3 sentence comprehensive statement of the means comparison, including at least:
+The actual difference in means
+Effect size (Cohen's *d*)
+Outcome of a two-sample t-test
+
+
+## Exploratory graphs to explore assumptions of t-test
+
+```{r}
+ggplot(data = hares_j_sites, aes(x = weight)) + # *remember to include = FALSE*
   geom_histogram() +
   facet_wrap(~sex_full)
 
@@ -143,7 +173,12 @@ ggplot(data = hares_j_sites, aes(sample = weight)) +
   facet_wrap(~sex_full)
 ```
 
+
+Male seem less linear, distribution less normal.
+
 The actual difference in mean weight between female and male snowshoe hares is ``. 
+
+## iv) Relationships between juvenle weight and hind foot length
 
 
 ```{r}
@@ -196,4 +231,23 @@ Simple linear regression was used to explore the relationship between hind foot 
 plot(hares_j_lm) # *remember to include = false*
 ```
 
+### Pearson's r
 
+
+```{r}
+hares_j_cor <- cor.test(hares_j$hindft, hares_j$weight)
+
+hares_j_cor
+```
+
+Here, we see that there is a strong positive correlation between penguin hindfoot length and weight(*r* = `r round(hares_j_cor$estimate,2)`, t(`r hares_j_cor$parameter`) = `r round(hares_j_cor$statistic,2)`, p < 0.001). 
+
+I have some concerns here about the homoscedacisity of the relationship. It seems that the residuals are even up to about the 100mm hind foot length but beyond that the model seems to be heteroscedastic, as the distance of the residuals from the regression line increases.
+
+In 2 - 3 sentences below your figure, describe the outcome of your linear regression exploration (e.g. slope interpretation, R2 value, and Pearson's r correlation) and touch briefly on which assumption(s) of linear regression may be a concern, and additional thoughts you have about how well (or not well…) the linear model describes the relationship. What worries you?
+
+## d) Summary: Summary: Include a very short summary describing your main findings from your juvenile hares exploration (bulletpoints are fine)
+
+
+
+## e) Citations: Include citations (professionally formatted), including the data citation and any other resources that were references in your mini report. 
